@@ -100,8 +100,17 @@
     잘못된 비밀번호 거절(ERROR 1045). 테이블은 아직 없음(T10 범위).
   - 남은 오류: 없음. 참고: 학습용 단순 비밀번호이므로 T12 별도 DB 서버에서는 강한 비밀번호 사용.
     클라이언트의 "--ssl-verify-server-cert is disabled" 경고는 로컬 접속에서 나오는 안내로 동작과 무관.
-- [ ] T10: backend/database.py, models.py, init_db.py 생성.
+- [x] T10: backend/database.py, models.py, init_db.py 생성.
   확인: python -m backend.init_db 실행 후 tasks 테이블 확인.
+  - 변경 파일: backend/database.py (.env 읽기, 엔진·세션, 설정 누락 시 안내), backend/models.py (TaskRow → tasks),
+    backend/init_db.py (create_all, 기존 테이블은 변경 안 함), backend/requirements.txt (SQLAlchemy 2.1.4, PyMySQL 1.2.3, python-dotenv 1.2.4)
+  - 실행 명령: .venv/bin/python -m backend.init_db
+  - 확인 결과(2026-10-13): 1회차 "tasks: 생성함", 2회차 "tasks: 이미 있음(변경 안 함)". 접속 URL 출력 시 비밀번호 *** 처리.
+    SHOW CREATE TABLE: id INT AUTO_INCREMENT PK, title VARCHAR(100), description VARCHAR(2000), status ENUM(TODO,DOING,DONE),
+    priority ENUM(HIGH,NORMAL,LOW), due_date DATE NULL, created_at DATETIME, InnoDB, utf8mb4.
+    ORM 저장·조회(이모지 포함 100자, 2028-02-29) 후 롤백, 101자·잘못된 status는 DB에서 거절(STRICT_TRANS_TABLES).
+    테스트 롤백으로 증가한 AUTO_INCREMENT를 빈 테이블 확인 후 1로 되돌림. 현재 행 0건.
+  - 남은 오류: 없음.
 - [ ] T11: API 메모리 저장을 DB로 교체.
   확인: 등록한 행을 SQL로 조회. API 재시작 후 데이터 유지.
 ## 5장: 서버 분리
