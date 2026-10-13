@@ -68,12 +68,69 @@ h2 {
 }
 
 .task-list li {
-  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
   margin-bottom: 8px;
   background: #fff;
   border: 1px solid #e2e4e8;
   border-radius: 6px;
+}
+
+.task-title {
+  flex: 1;
+  min-width: 0;
   overflow-wrap: anywhere;
+}
+
+.task-item.status-doing {
+  border-left: 4px solid #f0a020;
+}
+
+.task-item.status-done {
+  border-left: 4px solid #3aa55d;
+}
+
+.task-item.status-done .task-title {
+  color: #888;
+  text-decoration: line-through;
+}
+
+.task-status,
+.edit-title {
+  padding: 6px 8px;
+  font-size: 0.95rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+.edit-title {
+  flex: 1;
+  min-width: 0;
+}
+
+.task-item button {
+  padding: 6px 10px;
+  font-size: 0.9rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.task-item button:hover {
+  background: #f0f2f5;
+}
+
+.task-item button[data-action="delete"] {
+  color: #d32f2f;
+}
+
+@media (max-width: 480px) {
+  .task-list li {
+    flex-wrap: wrap;
+  }
 }
 
 .visually-hidden {
