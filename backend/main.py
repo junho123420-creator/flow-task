@@ -3,12 +3,15 @@
 # T07: PATCH·DELETE /api/tasks/{id}, 목록 필터(q·status·priority, AND).
 # T08: 개발용 프런트엔드(5500 포트)에서 호출할 수 있도록 CORS 허용.
 # T11: 메모리 저장을 MariaDB(tasks 테이블)로 교체. API를 재시작해도 데이터가 유지된다.
+# 추가: frontend/ 정적 파일도 제공해 8000 포트(또는 ngrok 주소) 하나로 화면과 API를 함께 사용할 수 있게 한다.
 from collections.abc import Iterator
 from datetime import date, datetime, timezone
+from pathlib import Path
 
 from fastapi import Depends, FastAPI, HTTPException, Query, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy import func, select
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
@@ -118,3 +121,9 @@ def delete_task(task_id: int, db: Session = Depends(get_db)) -> Response:
     db.delete(get_row(db, task_id))
     db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+# 화면 파일(index.html, app.js, styles.css). /api 경로와 /docs가 먼저 등록되어 있으므로 그 외 경로만 여기서 처리한다.
+# 반드시 맨 마지막에 등록해야 API 경로를 가리지 않는다.
+FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend"
+app.mount("/", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")

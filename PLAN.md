@@ -124,7 +124,11 @@
     잘못된 DB 포트로 실행 시 /api/tasks 503 {"detail":"Database unavailable"}(접속 정보 노출 없음), /api/health 200.
     프런트 연동 테스트 24건 통과(메모리 단계 전제인 "재시작 후 빈 목록" 1건은 DB 단계에서 데이터가 유지되므로 예상된 차이).
     테스트 전 tasks 0행·다음 id 1 → 테스트 후 테스트 행 삭제·AUTO_INCREMENT 1로 원상 복구.
+    사용자 확인: 화면에서 등록한 3건과 상태 변경(DOING, DONE)이 sudo mariadb의 SELECT로 조회됨.
   - 남은 오류: 없음.
+  - 추가 변경(PLAN 외, 사용자 요청): ngrok(포트 하나만 공개)으로 외부 접속하기 위해 backend/main.py에
+    StaticFiles로 frontend/ 제공을 추가. 8000 포트 하나로 화면과 API를 함께 사용, 기존 5500 방식도 유지.
+    확인: 8000 / → index.html 200, /api/·/docs 정상, ngrok 주소 / 200, /.env·/../.env·/backend/main.py는 404.
 ## 5장: 서버 분리
 - [ ] T12: DB 서버 구성 후 App 서버에서 SELECT 1 확인.
 - [ ] T13: App 서버 코드·가상환경·환경변수·systemd 구성.
