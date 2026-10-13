@@ -1,14 +1,25 @@
 # T05: API 서버 상태 확인(/api/health)
 # T06: 메모리 기반 /api/tasks GET·POST. API를 재시작하면 데이터와 id가 초기화된다.
 # T07: PATCH·DELETE /api/tasks/{id}, 목록 필터(q·status·priority, AND).
+# T08: 개발용 프런트엔드(5500 포트)에서 호출할 수 있도록 CORS 허용.
 from datetime import datetime, timezone
 from threading import Lock
 
 from fastapi import FastAPI, HTTPException, Query, Response, status
+from fastapi.middleware.cors import CORSMiddleware
 
 from backend.schemas import Priority, Status, Task, TaskCreate, TaskUpdate
 
 app = FastAPI(title="Task Flow API")
+
+# 개발 중에는 프런트엔드(python -m http.server 5500)와 API(8000)의 포트가 달라 CORS 허용이 필요하다.
+# Nginx로 같은 주소에서 제공하는 배포 단계(T14)에서는 사용되지 않는다.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://127.0.0.1:5500", "http://localhost:5500"],
+    allow_methods=["GET", "POST", "PATCH", "DELETE"],
+    allow_headers=["Content-Type"],
+)
 
 # 메모리 저장소. id 순서(등록순)로 보관한다.
 tasks: list[Task] = []

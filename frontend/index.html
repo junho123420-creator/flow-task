@@ -47,7 +47,11 @@
         </select>
       </div>
 
-      <p id="list-message" class="form-message" role="alert"></p>
+      <div class="list-status">
+        <p id="list-message" class="form-message" role="alert"></p>
+        <button id="retry-button" type="button" class="retry-button" hidden>다시 시도</button>
+      </div>
+      <p id="loading-message" class="empty-message" hidden>불러오는 중…</p>
       <p id="empty-message" class="empty-message">등록된 할 일이 없습니다.</p>
       <ul id="task-list" class="task-list"></ul>
     </section>

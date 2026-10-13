@@ -78,6 +78,22 @@ h2 {
   font-size: 0.9rem;
 }
 
+.list-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.retry-button {
+  margin-top: 8px;
+  padding: 4px 10px;
+  font-size: 0.9rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: #fff;
+  cursor: pointer;
+}
+
 .empty-message {
   color: #777;
 }

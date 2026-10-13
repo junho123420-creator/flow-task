@@ -69,8 +69,22 @@
     필터: q(대소문자·앞뒤 공백 무시), status, priority AND 조합, 잘못된 필터값 422.
     T06 회귀 35건, 재시작 초기화 2건 통과.
   - 남은 오류: 없음.
-- [ ] T08: 프런트엔드 저장 처리를 API 호출로 교체.
+- [x] T08: 프런트엔드 저장 처리를 API 호출로 교체.
   확인: 화면과 curl 목록이 같음. API 중지 시 오류 표시.
+  - 변경 파일: frontend/app.js (localStorage → API 호출, 서버 필터, 오류 처리, 요청 제한 시간 5초),
+    frontend/index.html·styles.css (다시 시도 버튼, 불러오는 중 표시), backend/main.py (CORS: 127.0.0.1:5500, localhost:5500만 허용)
+  - 결정: API 주소는 5500 포트면 http://<호스트>:8000/api, 그 외는 /api(T14 Nginx 대비).
+    필터는 서버(GET ?q=&status=&priority=, 검색 0.3초 디바운스, 늦게 온 응답 무시).
+    실패 시 화면은 바꾸지 않고 오류 표시, 첫 연결 실패 시 등록 중지 + 다시 시도. 404면 목록 새로 불러옴.
+    이전 localStorage(task-flow-v1) 데이터는 읽거나 지우지 않음(자동 이전 없음).
+  - 실행 명령: python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000 --reload
+              python3 -m http.server 5500 --bind 127.0.0.1 --directory frontend
+  - 확인 결과(2026-10-13): 브라우저에서 3건 등록·상태 변경 후 화면과 /api/tasks 응답 일치.
+    API 중지 후 오류 문구·다시 시도 표시, 등록 비활성화, API 재시작 후 다시 시도로 복구.
+    CORS: 5500 출처 preflight 200, 다른 출처 400. 연동 테스트 25건(실제 API 8001 + DOM 대역), 시간 초과 4건, T06 35건·T07 43건 회귀 통과.
+  - 발견·수정한 오류: Windows 브라우저 → WSL API가 꺼져 있을 때 연결이 거절되지 않고 대기하여 "불러오는 중"에서 멈춤.
+    fetch에 5초 제한 시간(AbortSignal.timeout)을 추가해 "서버가 응답하지 않습니다"로 표시하도록 수정.
+  - 남은 오류: 없음.
 ## 4장: DB
 - [ ] T09: MariaDB 전용 사용자·DB와 .env 준비. 접속 확인.
 - [ ] T10: backend/database.py, models.py, init_db.py 생성.
