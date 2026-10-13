@@ -86,7 +86,20 @@
     fetch에 5초 제한 시간(AbortSignal.timeout)을 추가해 "서버가 응답하지 않습니다"로 표시하도록 수정.
   - 남은 오류: 없음.
 ## 4장: DB
-- [ ] T09: MariaDB 전용 사용자·DB와 .env 준비. 접속 확인.
+- [x] T09: MariaDB 전용 사용자·DB와 .env 준비. 접속 확인.
+  - 변경 파일: .env.example (신규, 가짜 비밀번호만). .env는 로컬에만 두고 Git 제외(.gitignore, 권한 600).
+  - 환경: MariaDB 11.8.6 (Ubuntu 26.04, WSL2), 127.0.0.1:3306에서만 수신.
+  - DB 준비(사용자가 sudo mariadb에서 실행, 수업 방식):
+    CREATE USER task_flow_app@localhost; CREATE DATABASE task_flow;
+    GRANT ALL PRIVILEGES ON task_flow.* TO task_flow_app@localhost IDENTIFIED BY '<비밀번호>';
+  - 확인 명령: .env 값을 읽어 MYSQL_PWD로 전달(화면·명령줄에 비밀번호 미노출) 후
+    mariadb -h 127.0.0.1 -P 3306 -u task_flow_app task_flow -e "SELECT 1; SELECT CURRENT_USER(); SHOW GRANTS;"
+  - 확인 결과(2026-10-13): SELECT 1 → 1, CURRENT_USER task_flow_app@localhost, DATABASE task_flow.
+    문자셋 utf8mb4(utf8mb4_uca1400_ai_ci), 임시 테이블로 '한글😀' 저장·조회(3자) 확인.
+    권한은 task_flow.*만. mysql.user 조회 거절(ERROR 1142), 볼 수 있는 DB는 information_schema·task_flow뿐.
+    잘못된 비밀번호 거절(ERROR 1045). 테이블은 아직 없음(T10 범위).
+  - 남은 오류: 없음. 참고: 학습용 단순 비밀번호이므로 T12 별도 DB 서버에서는 강한 비밀번호 사용.
+    클라이언트의 "--ssl-verify-server-cert is disabled" 경고는 로컬 접속에서 나오는 안내로 동작과 무관.
 - [ ] T10: backend/database.py, models.py, init_db.py 생성.
   확인: python -m backend.init_db 실행 후 tasks 테이블 확인.
 - [ ] T11: API 메모리 저장을 DB로 교체.
