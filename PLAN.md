@@ -40,8 +40,14 @@
     Node DOM 대역 테스트: T04 36건, T03 23건, T01·T02 회귀 10건 통과. 정적 파일 3개 HTTP 200.
   - 남은 오류: 없음.
 ## 3장: API
-- [ ] T05: API-SPEC.md 작성, FastAPI /api/health 구현.
+- [x] T05: API-SPEC.md 작성, FastAPI /api/health 구현.
   확인: curl로 200과 status=ok.
+  - 변경 파일: API-SPEC.md, backend/__init__.py, backend/main.py, backend/requirements.txt(fastapi 0.143.0, uvicorn 0.54.0), .gitignore(.venv, __pycache__, .env)
+  - 준비: python3 -m venv .venv && .venv/bin/python -m pip install -r backend/requirements.txt (Python 3.14.4)
+  - 실행 명령: .venv/bin/python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000
+  - 확인 결과(2026-10-13): curl -i http://127.0.0.1:8000/api/health → HTTP/1.1 200 OK, {"status":"ok"}.
+    /docs 200, OpenAPI 경로는 /api/health 하나, /api/tasks는 아직 404(T06 범위).
+  - 남은 오류: 없음.
 - [ ] T06: 메모리 기반 /api/tasks GET과 POST.
   확인: /docs에서 등록 후 조회. 입력 위반은 422.
 - [ ] T07: PATCH·DELETE와 필터 구현.

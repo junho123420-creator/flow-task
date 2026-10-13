@@ -1,0 +1,4 @@
+# API 서버 프레임워크
+fastapi==0.143.0
+# FastAPI 실행 서버
+uvicorn==0.54.0
