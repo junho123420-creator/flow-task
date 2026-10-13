@@ -129,6 +129,9 @@
   - 추가 변경(PLAN 외, 사용자 요청): ngrok(포트 하나만 공개)으로 외부 접속하기 위해 backend/main.py에
     StaticFiles로 frontend/ 제공을 추가. 8000 포트 하나로 화면과 API를 함께 사용, 기존 5500 방식도 유지.
     확인: 8000 / → index.html 200, /api/·/docs 정상, ngrok 주소 / 200, /.env·/../.env·/backend/main.py는 404.
+  - 추가 변경(PLAN 외, 수업 명령과 맞춤): 패키지 목록을 루트 requirements.txt로 이동. backend/requirements.txt는
+    "-r ../requirements.txt" 한 줄로 남겨 두 경로 모두 동작. 확인: 두 파일 pip --dry-run 성공, 루트에서 uvicorn backend.main:app 실행 시 health 200.
+    EC2(bastion, Amazon Linux 2023)는 기본 Python 3.9라 python3.12로 가상환경 생성 필요(SQLAlchemy 2.1은 Python 3.11 이상).
 ## 5장: 서버 분리
 - [ ] T12: DB 서버 구성 후 App 서버에서 SELECT 1 확인.
 - [ ] T13: App 서버 코드·가상환경·환경변수·systemd 구성.
