@@ -3,7 +3,7 @@ import re
 from datetime import date
 from typing import Annotated, Literal
 
-from pydantic import AfterValidator, BaseModel, ConfigDict, StringConstraints
+from pydantic import AfterValidator, BaseModel, ConfigDict, StringConstraints, model_validator
 
 Status = Literal["TODO", "DOING", "DONE"]
 Priority = Literal["HIGH", "NORMAL", "LOW"]
@@ -40,6 +40,25 @@ class TaskCreate(BaseModel):
     status: Status = "TODO"
     priority: Priority = "NORMAL"
     due_date: DueDate = None
+
+
+class TaskUpdate(BaseModel):
+    # 보낸 필드만 수정한다. 보내지 않은 필드는 model_fields_set에 없으므로 그대로 유지된다.
+    model_config = ConfigDict(extra="forbid")
+
+    title: Title | None = None
+    description: Description | None = None
+    status: Status | None = None
+    priority: Priority | None = None
+    due_date: DueDate = None
+
+    @model_validator(mode="after")
+    def reject_null(self) -> "TaskUpdate":
+        # 생략은 허용하지만 null로 비우는 것은 due_date만 허용한다.
+        for name in ("title", "description", "status", "priority"):
+            if name in self.model_fields_set and getattr(self, name) is None:
+                raise ValueError(f"{name} cannot be null")
+        return self
 
 
 class Task(BaseModel):

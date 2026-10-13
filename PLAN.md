@@ -58,8 +58,17 @@
     잘못된 status·priority·날짜, id·created_at·모르는 필드, JSON 오류), 거절 시 미저장, 동시 50건 id 중복 없음.
     서버 종료 후 재시작 시 목록 [] 및 id 1부터 시작 확인.
   - 남은 오류: 없음. 참고: 필터(q·status·priority)는 T07 범위.
-- [ ] T07: PATCH·DELETE와 필터 구현.
+- [x] T07: PATCH·DELETE와 필터 구현.
   확인: 미전달 필드 유지, 없는 ID 404, 삭제 204.
+  - 변경 파일: backend/schemas.py (TaskUpdate: 부분 수정, due_date 외 null 거절), backend/main.py (PATCH·DELETE, GET 필터 q·status·priority)
+  - 실행 명령: .venv/bin/python -m uvicorn backend.main:app --host 127.0.0.1 --port 8001 (테스트용 포트)
+  - 확인 결과(2026-10-13): HTTP 테스트 43건 통과.
+    PATCH {"status":"DOING"} → 200, 다른 필드·created_at 그대로. due_date null로 마감일 삭제. 빈 본문은 변경 없음.
+    없는 id PATCH·DELETE → 404 {"detail":"Task not found"}. DELETE → 204 본문 없음, 이후 같은 id 404, id 재사용 안 함.
+    PATCH 422 14종(title·description·status·priority null, 규칙 위반, id·created_at·모르는 필드, JSON 오류), 422 후 항목 그대로.
+    필터: q(대소문자·앞뒤 공백 무시), status, priority AND 조합, 잘못된 필터값 422.
+    T06 회귀 35건, 재시작 초기화 2건 통과.
+  - 남은 오류: 없음.
 - [ ] T08: 프런트엔드 저장 처리를 API 호출로 교체.
   확인: 화면과 curl 목록이 같음. API 중지 시 오류 표시.
 ## 4장: DB
