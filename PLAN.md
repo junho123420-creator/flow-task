@@ -3,8 +3,13 @@
 한 번에 아래 작업 하나만 구현한다. 실제 확인 전에는 완료로 표시하지 않는다.
 상태는 [ ] 미완료, [x] 확인 완료로 관리하고 확인 결과를 각 항목 아래 기록한다.
 ## 2장: 브라우저 앱
-- [ ] T01: frontend/index.html, styles.css, app.js 생성. 제목 입력·등록·목록만 구현한다.
+- [x] T01: frontend/index.html, styles.css, app.js 생성. 제목 입력·등록·목록만 구현한다.
   확인: 두 항목 등록, 빈 제목 거절. 이 단계에서 새로고침하면 사라져도 정상이다.
+  - 변경 파일: frontend/index.html, frontend/styles.css, frontend/app.js (신규)
+  - 실행 명령: python3 -m http.server 5500 --bind 127.0.0.1 --directory frontend
+  - 확인 결과(2026-10-13): 브라우저에서 두 항목 등록, 빈 제목 거절, 새로고침 시 초기화 확인.
+    정적 파일 3개 HTTP 200. Node DOM 대역 테스트 8건 통과(공백만 거절, 101자 거절, 100자 허용, HTML 입력 글자 표시 포함).
+  - 남은 오류: 없음. (별도: AGENTS.md의 PostgreSQL 표기를 MariaDB로 수정하여 PRD와 일치시킴)
 - [ ] T02: localStorage(task-flow-v1) 저장·복원.
   확인: 새로고침 후 유지. 손상된 저장값을 자동 덮어쓰지 않는다.
 - [ ] T03: 상태 변경, 수정, 삭제 확인.
