@@ -111,8 +111,20 @@
     ORM 저장·조회(이모지 포함 100자, 2028-02-29) 후 롤백, 101자·잘못된 status는 DB에서 거절(STRICT_TRANS_TABLES).
     테스트 롤백으로 증가한 AUTO_INCREMENT를 빈 테이블 확인 후 1로 되돌림. 현재 행 0건.
   - 남은 오류: 없음.
-- [ ] T11: API 메모리 저장을 DB로 교체.
+- [x] T11: API 메모리 저장을 DB로 교체.
   확인: 등록한 행을 SQL로 조회. API 재시작 후 데이터 유지.
+  - 변경 파일: backend/main.py (요청마다 DB 세션, TaskRow ↔ Task 변환, Lock 제거, DB 연결 불가 시 503),
+    API-SPEC.md (503 Database unavailable, id는 DB 발급). 프런트엔드는 API 계약이 같아 변경 없음.
+  - 검색: 기본 정렬 규칙(ai_ci)은 악센트도 무시하므로 LOWER(title) + utf8mb4_bin 비교로 메모리 단계와 같게 "대소문자만 무시".
+    검색어의 %, _는 글자로 취급(autoescape).
+  - 실행 명령: python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000 --reload (테스트는 8001·8003 포트)
+  - 확인 결과(2026-10-13): API 테스트 34건 통과(POST·PATCH·DELETE·422·404·필터·동시 30건).
+    SQL(mariadb CLI)로 등록한 행 조회: id 1 '보고서 작성' TODO NORMAL 등 40행 확인.
+    API 프로세스를 종료 후 새로 실행 → 같은 id 목록·수정 내용 유지, 새 등록 id 이어서 발급.
+    잘못된 DB 포트로 실행 시 /api/tasks 503 {"detail":"Database unavailable"}(접속 정보 노출 없음), /api/health 200.
+    프런트 연동 테스트 24건 통과(메모리 단계 전제인 "재시작 후 빈 목록" 1건은 DB 단계에서 데이터가 유지되므로 예상된 차이).
+    테스트 전 tasks 0행·다음 id 1 → 테스트 후 테스트 행 삭제·AUTO_INCREMENT 1로 원상 복구.
+  - 남은 오류: 없음.
 ## 5장: 서버 분리
 - [ ] T12: DB 서버 구성 후 App 서버에서 SELECT 1 확인.
 - [ ] T13: App 서버 코드·가상환경·환경변수·systemd 구성.

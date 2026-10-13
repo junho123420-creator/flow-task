@@ -110,6 +110,11 @@ FastAPI 기본 형식을 따른다.
 {"detail": "Task not found"}
 ```
 
+`503`: DB에 연결할 수 없음(DB 단계 T11~). 접속 정보 등 상세 내용은 응답에 넣지 않는다.
+```json
+{"detail": "Database unavailable"}
+```
+
 `422`: `detail` 배열에 위반한 위치(`loc`)와 이유(`msg`)를 담는다.
 ```json
 {"detail": [{"type": "string_too_short", "loc": ["body", "title"], "msg": "String should have at least 1 character", "input": ""}]}
@@ -117,5 +122,6 @@ FastAPI 기본 형식을 따른다.
 
 ## 저장 방식에 따른 차이
 - 메모리 단계(T06~T08): API를 재시작하면 데이터와 `id` 번호가 초기화된다.
-- DB 단계(T11~): API를 재시작해도 데이터가 유지된다.
+- DB 단계(T11~): API를 재시작해도 데이터가 유지된다. `id`는 DB(AUTO_INCREMENT)가 발급한다.
+  DB가 응답하지 않으면 모든 `/api/tasks` 요청은 `503`을 반환한다.
 - 단계가 바뀌어도 이 명세(요청·응답 형식)는 바뀌지 않는다.

@@ -1,13 +1,20 @@
 # T05: API 서버 상태 확인(/api/health)
-# T06: 메모리 기반 /api/tasks GET·POST. API를 재시작하면 데이터와 id가 초기화된다.
+# T06: /api/tasks GET·POST
 # T07: PATCH·DELETE /api/tasks/{id}, 목록 필터(q·status·priority, AND).
 # T08: 개발용 프런트엔드(5500 포트)에서 호출할 수 있도록 CORS 허용.
-from datetime import datetime, timezone
-from threading import Lock
+# T11: 메모리 저장을 MariaDB(tasks 테이블)로 교체. API를 재시작해도 데이터가 유지된다.
+from collections.abc import Iterator
+from datetime import date, datetime, timezone
 
-from fastapi import FastAPI, HTTPException, Query, Response, status
+from fastapi import Depends, FastAPI, HTTPException, Query, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from sqlalchemy import func, select
+from sqlalchemy.exc import OperationalError
+from sqlalchemy.orm import Session
 
+from backend.database import SessionLocal
+from backend.models import TaskRow
 from backend.schemas import Priority, Status, Task, TaskCreate, TaskUpdate
 
 app = FastAPI(title="Task Flow API")
@@ -21,22 +28,39 @@ app.add_middleware(
     allow_headers=["Content-Type"],
 )
 
-# 메모리 저장소. id 순서(등록순)로 보관한다.
-tasks: list[Task] = []
-next_id = 1
-# 동시에 들어온 요청이 목록과 id를 함께 바꾸지 않도록 막는다.
-tasks_lock = Lock()
+
+@app.exception_handler(OperationalError)
+def database_unavailable(request: Request, exc: OperationalError) -> JSONResponse:
+    # DB 서버가 꺼져 있거나 접속 정보가 틀린 경우. 상세 내용(접속 정보)은 응답에 넣지 않는다.
+    return JSONResponse(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, content={"detail": "Database unavailable"})
 
 
-def utc_now() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+def get_db() -> Iterator[Session]:
+    with SessionLocal() as session:
+        yield session
 
 
-def find_index(task_id: int) -> int:
-    for index, task in enumerate(tasks):
-        if task.id == task_id:
-            return index
-    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
+def to_task(row: TaskRow) -> Task:
+    return Task(
+        id=row.id,
+        title=row.title,
+        description=row.description,
+        status=row.status,
+        priority=row.priority,
+        due_date=row.due_date.isoformat() if row.due_date else None,
+        created_at=row.created_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
+    )
+
+
+def to_date(value: str | None) -> date | None:
+    return date.fromisoformat(value) if value is not None else None
+
+
+def get_row(db: Session, task_id: int) -> TaskRow:
+    row = db.get(TaskRow, task_id)
+    if row is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
+    return row
 
 
 @app.get("/api/health")
@@ -50,40 +74,47 @@ def list_tasks(
     # 쿼리 이름은 status지만, fastapi.status 모듈과 겹치지 않도록 변수 이름은 따로 둔다.
     status_filter: Status | None = Query(default=None, alias="status"),
     priority: Priority | None = None,
+    db: Session = Depends(get_db),
 ) -> list[Task]:
+    query = select(TaskRow).order_by(TaskRow.id)
     keyword = (q or "").strip().lower()
-    with tasks_lock:
-        return [
-            task
-            for task in tasks
-            if (keyword == "" or keyword in task.title.lower())
-            and (status_filter is None or task.status == status_filter)
-            and (priority is None or task.priority == priority)
-        ]
+    if keyword:
+        # 기본 정렬 규칙(ai_ci)은 악센트까지 무시하므로, 소문자로 바꾼 뒤 이진 비교해 대소문자만 무시한다.
+        # autoescape: 검색어의 %, _를 와일드카드가 아닌 글자로 취급한다.
+        query = query.where(func.lower(TaskRow.title).collate("utf8mb4_bin").contains(keyword, autoescape=True))
+    if status_filter is not None:
+        query = query.where(TaskRow.status == status_filter)
+    if priority is not None:
+        query = query.where(TaskRow.priority == priority)
+    return [to_task(row) for row in db.scalars(query)]
 
 
 @app.post("/api/tasks", status_code=status.HTTP_201_CREATED)
-def create_task(payload: TaskCreate) -> Task:
-    global next_id
-    with tasks_lock:
-        task = Task(id=next_id, created_at=utc_now(), **payload.model_dump())
-        tasks.append(task)
-        next_id += 1
-    return task
+def create_task(payload: TaskCreate, db: Session = Depends(get_db)) -> Task:
+    data = payload.model_dump()
+    row = TaskRow(
+        **{**data, "due_date": to_date(data["due_date"])},
+        # DATETIME은 초 단위로 저장하므로 마이크로초는 버린다.
+        created_at=datetime.now(timezone.utc).replace(tzinfo=None, microsecond=0),
+    )
+    db.add(row)
+    db.commit()
+    db.refresh(row)
+    return to_task(row)
 
 
 @app.patch("/api/tasks/{task_id}")
-def update_task(task_id: int, payload: TaskUpdate) -> Task:
-    changes = payload.model_dump(exclude_unset=True)
-    with tasks_lock:
-        index = find_index(task_id)
-        task = tasks[index].model_copy(update=changes)
-        tasks[index] = task
-    return task
+def update_task(task_id: int, payload: TaskUpdate, db: Session = Depends(get_db)) -> Task:
+    row = get_row(db, task_id)
+    for name, value in payload.model_dump(exclude_unset=True).items():
+        setattr(row, name, to_date(value) if name == "due_date" else value)
+    db.commit()
+    db.refresh(row)
+    return to_task(row)
 
 
 @app.delete("/api/tasks/{task_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_task(task_id: int) -> Response:
-    with tasks_lock:
-        del tasks[find_index(task_id)]
+def delete_task(task_id: int, db: Session = Depends(get_db)) -> Response:
+    db.delete(get_row(db, task_id))
+    db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
