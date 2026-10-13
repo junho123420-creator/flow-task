@@ -13,12 +13,40 @@
     <form id="task-form" class="task-form" novalidate>
       <label for="task-title" class="visually-hidden">할 일 제목</label>
       <input id="task-title" type="text" placeholder="할 일 제목 (1~100자)" autocomplete="off">
+      <label for="task-priority" class="visually-hidden">우선순위</label>
+      <select id="task-priority">
+        <option value="HIGH">높음</option>
+        <option value="NORMAL" selected>보통</option>
+        <option value="LOW">낮음</option>
+      </select>
+      <label for="task-due-date" class="visually-hidden">마감일</label>
+      <input id="task-due-date" type="date">
       <button type="submit">등록</button>
     </form>
     <p id="form-message" class="form-message" role="alert"></p>
 
     <section>
       <h2>할 일 목록 <span id="task-count">(0)</span></h2>
+
+      <div class="filters">
+        <label for="filter-search" class="visually-hidden">제목 검색</label>
+        <input id="filter-search" type="search" placeholder="제목 검색" autocomplete="off">
+        <label for="filter-status" class="visually-hidden">상태 필터</label>
+        <select id="filter-status">
+          <option value="">모든 상태</option>
+          <option value="TODO">할 일</option>
+          <option value="DOING">진행 중</option>
+          <option value="DONE">완료</option>
+        </select>
+        <label for="filter-priority" class="visually-hidden">우선순위 필터</label>
+        <select id="filter-priority">
+          <option value="">모든 우선순위</option>
+          <option value="HIGH">높음</option>
+          <option value="NORMAL">보통</option>
+          <option value="LOW">낮음</option>
+        </select>
+      </div>
+
       <p id="list-message" class="form-message" role="alert"></p>
       <p id="empty-message" class="empty-message">등록된 할 일이 없습니다.</p>
       <ul id="task-list" class="task-list"></ul>

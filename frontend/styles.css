@@ -23,17 +23,38 @@ h2 {
   font-size: 1.1rem;
 }
 
-.task-form {
+.task-form,
+.filters {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
 }
 
-.task-form input {
-  flex: 1;
+.task-form input,
+.task-form select,
+.filters input,
+.filters select {
   padding: 10px 12px;
   font-size: 1rem;
   border: 1px solid #ccc;
   border-radius: 6px;
+  background: #fff;
+}
+
+#task-title,
+#filter-search {
+  flex: 1;
+  min-width: 180px;
+}
+
+.filters {
+  margin-bottom: 4px;
+}
+
+.filters input,
+.filters select {
+  padding: 8px 10px;
+  font-size: 0.95rem;
 }
 
 .task-form button {
@@ -78,9 +99,51 @@ h2 {
   border-radius: 6px;
 }
 
-.task-title {
+.task-main {
   flex: 1;
   min-width: 0;
+}
+
+.task-title {
+  overflow-wrap: anywhere;
+}
+
+.task-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.badge {
+  padding: 1px 8px;
+  font-size: 0.8rem;
+  border-radius: 999px;
+  background: #eef0f3;
+  color: #555;
+}
+
+.badge.priority-high {
+  background: #fde8e8;
+  color: #b42318;
+}
+
+.badge.priority-low {
+  background: #eef4ff;
+  color: #3559a8;
+}
+
+.badge.overdue-badge {
+  background: #d32f2f;
+  color: #fff;
+  font-weight: 600;
+}
+
+.task-description {
+  margin: 6px 0 0;
+  color: #555;
+  font-size: 0.9rem;
+  white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
 
@@ -97,17 +160,40 @@ h2 {
   text-decoration: line-through;
 }
 
+.task-item.overdue {
+  background: #fff6f6;
+  border-color: #f3c4c4;
+}
+
+.task-item.overdue.status-doing {
+  border-left-color: #f0a020;
+}
+
+.task-item.editing {
+  flex-direction: column;
+  align-items: stretch;
+}
+
 .task-status,
-.edit-title {
+.edit-title,
+.edit-description,
+.edit-priority,
+.edit-due-date {
   padding: 6px 8px;
+  font: inherit;
   font-size: 0.95rem;
   border: 1px solid #ccc;
   border-radius: 6px;
 }
 
-.edit-title {
-  flex: 1;
-  min-width: 0;
+.edit-description {
+  resize: vertical;
+}
+
+.edit-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .task-item button {
