@@ -48,8 +48,16 @@
   - 확인 결과(2026-10-13): curl -i http://127.0.0.1:8000/api/health → HTTP/1.1 200 OK, {"status":"ok"}.
     /docs 200, OpenAPI 경로는 /api/health 하나, /api/tasks는 아직 404(T06 범위).
   - 남은 오류: 없음.
-- [ ] T06: 메모리 기반 /api/tasks GET과 POST.
+- [x] T06: 메모리 기반 /api/tasks GET과 POST.
   확인: /docs에서 등록 후 조회. 입력 위반은 422.
+  - 변경 파일: backend/schemas.py (신규, 요청·응답 형식과 검증), backend/main.py (메모리 저장소, GET·POST, 등록 시 Lock)
+  - 실행 명령: python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000 --reload
+  - 확인 결과(2026-10-13): /docs에서 POST {"title":"보고서 작성","priority":"HIGH"} → 201(id 1, 기본값 채움),
+    GET → 200 목록에 해당 항목, POST {"title":""} → 422(loc body.title, string_too_short).
+    HTTP 테스트(8001 포트) 35건 통과: 기본값·공백 제거·경계값(100자, 2000자, 이모지, 윤년), 422 23종(빈/공백/101자 제목,
+    잘못된 status·priority·날짜, id·created_at·모르는 필드, JSON 오류), 거절 시 미저장, 동시 50건 id 중복 없음.
+    서버 종료 후 재시작 시 목록 [] 및 id 1부터 시작 확인.
+  - 남은 오류: 없음. 참고: 필터(q·status·priority)는 T07 범위.
 - [ ] T07: PATCH·DELETE와 필터 구현.
   확인: 미전달 필드 유지, 없는 ID 404, 삭제 204.
 - [ ] T08: 프런트엔드 저장 처리를 API 호출로 교체.
